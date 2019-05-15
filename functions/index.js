@@ -94,7 +94,7 @@ exports.dataPross = functions.https.onRequest((request, response) => {
           var newPostRef = admin
             .database()
             .ref('/workout_sessions/' + sessionId)
-            .push({
+            .set({
               data: storedData
             })
           response.json({
@@ -103,8 +103,21 @@ exports.dataPross = functions.https.onRequest((request, response) => {
           console.log("kk");
 
         } else {
+          var differenceData = userData.data;
+          var mags = [];
+          for (int i = 0; i<differenceData.count;i++) {
+            differenceData[i].position.x -= storedData[i].position.x;
+            differenceData[i].position.y -= storedData[i].position.y;
+            differenceData[i].position.z -= storedData[i].position.z;
+
+            let temp = [differenceData[i].position.x,differenceData[i].position.y,differenceData[i].position.z];
+            let temp_mag = calcMagniude(temp);
+            mags.append(temp_mag);
+          }
+
+          let net_mag = calcMagniude(mags);
           response.json({
-            alert: "sure"
+            alert: net_mag
           })
         }
 
@@ -113,6 +126,15 @@ exports.dataPross = functions.https.onRequest((request, response) => {
       }
     })
 });
+
+function calcMagniude(positionData) {
+  let num = positionData.length;
+  var temp = 0;
+  for (int i=0;i<num;i++) {
+    temp += positionData[i]*positionData[i];
+  }
+  return sqrt(temp);
+}
 
               //compare. Can it send array without giving any names?
 
