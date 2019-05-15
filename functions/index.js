@@ -74,37 +74,45 @@ exports.createUID = functions.https.onRequest((request, response) => {
 
 });
 
-//Functions 2 (Parse and Processing)
+//Functions 2 (Parse and Data Processing)
 exports.dataPross = functions.https.onRequest((request, response) => {
 
-      var sessionId = request.body.session_id;
-      var storedData = request.body.data;
-      //var sensorData = request.body.data;
+  var sessionId = request.body.session_id;
+  var storedData = request.body.data;
+  //var sensorData = request.body.data;
 
-      //First check to see if the data exists
+  //First check to see if the data exists
+  var newPostRef =
+    admin.database().ref("/workout_sessions/" + sessionId)
+    .once("value", snapshot => { //once takes snapshot
+      if (snapshot.exists()) {
+        const userData = snapshot.val(); //null or undefined
+        if (userData.data === null || userData.data === undefined) {
+          // no data exists so store initial data
+          //Store the data in database if it does not already exist
+          console.log("no")
+          var newPostRef = admin
+            .database()
+            .ref('/workout_sessions/' + sessionId)
+            .push({
+              data: storedData
+            })
+          response.json({
+            alert: 'null'
+          })
+          console.log("kk");
 
-      ref
-        .child("workout_sessions")
-        .orderByChild("session_id")
-        .equalTo(sessionId)
-        .once("value", snapshot => {
-            if (snapshot.exists()) {
-              const userData = snapshot.val();
-              else {
-                //Store the data in database if it does not already exist
+        } else {
+          response.json({
+            alert: "sure"
+          })
+        }
 
-                var newPostRef = admin
-                  .database()
-                  .ref('/workout_sessions/' + user_id)
-                  .push({
-                    data: storedData
-                  })
-                  .then(() =>
-                    response.json({
-                        message: 'Gotem!'
-                      }
-                    }
-                  });
+      } else {
+        //can return error
+      }
+    })
+});
 
               //compare. Can it send array without giving any names?
 
