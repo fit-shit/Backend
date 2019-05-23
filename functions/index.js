@@ -79,6 +79,7 @@ exports.dataPross = functions.https.onRequest((request, response) => {
 
   var sessionId = request.body.session_id;
   var storedData = request.body.data;
+  var userId = request.body.user_id;
   //var sensorData = request.body.data;
 
   //First check to see if the data exists
@@ -90,39 +91,42 @@ exports.dataPross = functions.https.onRequest((request, response) => {
         if (userData.data === null || userData.data === undefined) {
           // no data exists so store initial data
           //Store the data in database if it does not already exist
-          console.log("no")
+
           var newPostRef = admin
             .database()
             .ref('/workout_sessions/' + sessionId)
             .set({
-              data: storedData
+              user_id: userId,
+                data: storedData
             })
           response.json({
             alert: 'null'
           })
-          console.log("kk");
-
         } else {
           var differenceData = userData.data;
           var mags = [];
-          for (int i = 0; i<differenceData.count;i++) {
+          for (var i = 0; i<differenceData.length;i++) {
             differenceData[i].position.x -= storedData[i].position.x;
             differenceData[i].position.y -= storedData[i].position.y;
             differenceData[i].position.z -= storedData[i].position.z;
 
             let temp = [differenceData[i].position.x,differenceData[i].position.y,differenceData[i].position.z];
             let temp_mag = calcMagniude(temp);
-            mags.append(temp_mag);
+            mags.push(temp_mag);
           }
 
+          let threshold = 2;
           let net_mag = calcMagniude(mags);
+          let alert = net_mag >= threshold;
           response.json({
-            alert: net_mag
+            magnitude_change: net_mag,
+            alert: alert
           })
         }
-
       } else {
-        //can return error
+        response.json({
+            error: "Nothing in database ya dumb bitch"
+          })
       }
     })
 });
@@ -130,104 +134,8 @@ exports.dataPross = functions.https.onRequest((request, response) => {
 function calcMagniude(positionData) {
   let num = positionData.length;
   var temp = 0;
-  for (int i=0;i<num;i++) {
+  for (var i=0;i<num;i++) {
     temp += positionData[i]*positionData[i];
   }
-  return sqrt(temp);
+  return Math.sqrt(temp);
 }
-
-              //compare. Can it send array without giving any names?
-
-              //var second = data[1];
-              //var third  = data[2];
-              //var fourth = data[3];
-
-              //function to compare arrays
-
-            //   function compare(storedData, sensorData) {
-            //     const finalarray = [];
-            //
-            //     storedData.forEach((e1) => sensorData.forEach((e2) => {
-            //       if (e1 === e2) {
-            //         finalarray.push(e1)
-            //       }
-            //     }));
-            //     return finalarray;
-            //   }
-            // })
-
-
-
-
-
-
-
-
-          //JUNK
-
-
-
-
-
-          /*const functions = require('firebase-functions');
-
-          //Function to retrieve query parameter (text message), transform it (uppercase)
-          //and push it to realtime firebase database.
-
-          //connecting to firebase database
-          const admin = require('firebase-admin');
-          //initializeApp
-          admin.initializeApp();
-
-          //transformation
-          const toUpperCase = (string) => string.toUpperCase();
-
-          exports.changeMessage = functions.https.onRequest((request, response) => {
-            //const text = request.query.text; //takes text message
-            const resp = request.body.name; // GET request use query; POST request body
-            const a = request.body.data;
-
-            const a_x = a[0];
-            const a_y = a[1];
-            const a_z = a[2];
-
-            //connects to the firebase database
-            admin
-              .database()
-              .ref('/messages') // connection under refrense messages
-              .push({
-                text: resp
-              }) //push the text
-              // response with a message
-              .then(() =>
-                response.json({
-                  message: 'Gotem!',
-                  x: a_x,
-                  y: a_y,
-                  z: a_z
-                }))
-              .catch(() => {
-                reponse.json({
-                  message: 'nvm'
-                })
-              })
-            // admin
-            //   .database()
-            //   .ref('/messages') // connection under refrense messages
-            //   .push({
-            //     text: secretText
-            //   }) //push the text
-            //   // response with a message
-            //   .then(() =>
-            //     response.json({
-            //       message: 'Gotem!',
-            //       text
-            //     }))
-            //   .catch(() => {
-            //     reponse.json({
-            //       message: 'nvm'
-            //     })
-            //   })
-
-          })
-          */
